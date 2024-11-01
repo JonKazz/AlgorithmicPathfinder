@@ -20,11 +20,29 @@ pub mod grid {
         window::width() / 3.0
     }
 
-    pub fn y_pos() -> u16 {
-        (window::height() / 4.0) as u16
+    pub fn y_pos() -> f32 {
+        window::height() / 5.0
     }
 
-    pub fn x_pos() -> u16 {
-        (window::width() / 3.0) as u16
+    pub fn x_pos() -> f32 {
+        window::width() / 3.0
+    }
+}
+
+pub mod buttons {
+    use super::grid;
+
+    pub const NUM_BUTTONS: usize = 1;
+   
+    pub fn width() -> f32 {
+        grid::size() / 3.0
+    }
+
+    pub fn height() -> f32 {
+        grid::size() / 6.0
+    }
+
+    pub fn right_buttons_x() -> f32 {
+        grid::x_pos() as f32 + grid::size() + 100.0
     }
 }

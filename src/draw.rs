@@ -1,5 +1,6 @@
 use macroquad::prelude::*;
 use crate::constants;
+use crate::button;
 
 pub fn adjust_grid(zoom_level: u16, grid: &mut [[[f32; 4]; constants::grid::NUM_TILES]; constants::grid::NUM_TILES]) {
     let tile_size = constants::grid::size() / zoom_level as f32;
@@ -20,7 +21,6 @@ pub fn adjust_grid(zoom_level: u16, grid: &mut [[[f32; 4]; constants::grid::NUM_
         y_pos += tile_size;
     }
 }
-
 
 pub fn draw_grid(zoom_level: u16, grid: [[[f32; 4]; constants::grid::NUM_TILES]; constants::grid::NUM_TILES]) {
     let center= constants::grid::NUM_TILES / 2;
@@ -44,5 +44,11 @@ pub fn draw_grid(zoom_level: u16, grid: [[[f32; 4]; constants::grid::NUM_TILES];
             draw_rectangle(x, y, size, size, color);
             draw_rectangle_lines(x, y, size, size, constants::grid::TILE_THICKNESS, BLACK);
         }
+    }
+}
+
+pub fn draw_buttons(buttons: &[button::Button]) {
+    for button in buttons {
+        button.draw();
     }
 }
