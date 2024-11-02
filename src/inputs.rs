@@ -1,6 +1,6 @@
-use macroquad::prelude::*;
-use crate::constants;
 use crate::button;
+use crate::constants;
+use macroquad::prelude::*;
 
 pub struct InputHandler {
     holding_leftclick: bool,
@@ -28,9 +28,7 @@ impl InputHandler {
 
         if is_mouse_button_pressed(MouseButton::Left) {
             self.holding_leftclick = true;
-            
-            let (x, y) = mouse_position();
-            handle_button_click(x, y, buttons);
+            handle_button_click(buttons, grid);
         }
 
         if self.holding_leftclick {
@@ -40,6 +38,15 @@ impl InputHandler {
 
         if is_mouse_button_released(MouseButton::Left) {
             self.holding_leftclick = false;
+        }
+    }
+
+    pub fn resize(&mut self, buttons: &mut [button::Button; constants::buttons::NUM_BUTTONS]) {
+        let mut y = constants::grid::y_pos();
+        for button in buttons {
+            button.x = constants::buttons::right_buttons_x();
+            button.y = y;
+            y += constants::buttons::button_distance_y();
         }
     }
 }
@@ -75,15 +82,26 @@ pub fn handle_grid_click(
 }
 
 pub fn handle_button_click(
-    x: f32,
-    y: f32,
     buttons: &mut [button::Button; constants::buttons::NUM_BUTTONS],
+    grid: &mut [[[f32; 4]; constants::grid::NUM_TILES]; constants::grid::NUM_TILES],
 ) {
     for button in buttons {
-        let topleft = (button.x, button.y);
-        let bottomright = (button.x + button.width, button.y + button.height);
-        if click_inside_box(x, y, topleft.0, topleft.1, bottomright.0, bottomright.1) {
-            button.clicked();
+        if button.hovered() {
+            match button.text.as_str() {
+                "CLEAR" => clear_grid(grid),
+                "PLACE WALL" => {},
+                "START FLAG" => {},
+                "END FLAGE" => {},
+                _ => {}
+            }
+        }
+    }
+}
+
+pub fn clear_grid(grid: &mut [[[f32; 4]; constants::grid::NUM_TILES]; constants::grid::NUM_TILES]) {
+    for row in 0..constants::grid::NUM_TILES {
+        for col in 0..constants::grid::NUM_TILES {
+            grid[row][col][3] = 0.0;
         }
     }
 }
