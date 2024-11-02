@@ -16,6 +16,10 @@ pub mod grid {
     pub const NUM_TILES: usize = 65;
     pub const TILE_THICKNESS: f32 = 1.0;
 
+    pub fn border_thickness() -> f32 {
+        size() / 6.0
+    }
+
     pub fn size() -> f32 {
         window::width() / 2.0
     }
@@ -33,6 +37,7 @@ pub mod buttons {
     use super::grid;
 
     pub const NUM_BUTTONS: usize = 4;
+    pub const BORDER_SIZE: f32 = 5.0;
 
     pub fn width() -> f32 {
         grid::size() / 3.0

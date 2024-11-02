@@ -1,5 +1,6 @@
 use crate::button;
 use crate::constants;
+use constants::grid;
 use macroquad::prelude::*;
 
 pub struct InputHandler {
@@ -16,11 +17,12 @@ impl InputHandler {
     pub fn handle_inputs(
         &mut self,
         zoom_level: &mut u16,
-        grid: &mut [[[f32; 4]; constants::grid::NUM_TILES]; constants::grid::NUM_TILES],
+        grid: &mut [[[f32; 4]; grid::NUM_TILES]; grid::NUM_TILES],
         buttons: &mut [button::Button; constants::buttons::NUM_BUTTONS],
+        mode: &mut Color,
     ) {
         let (_, scroll) = mouse_wheel();
-        if scroll > 0.0 && *zoom_level < (constants::grid::NUM_TILES as u16) - 1 {
+        if scroll > 0.0 && *zoom_level < (grid::NUM_TILES as u16) - 1 {
             *zoom_level += 2;
         } else if scroll < 0.0 && *zoom_level > 10 {
             *zoom_level -= 2;
@@ -28,12 +30,12 @@ impl InputHandler {
 
         if is_mouse_button_pressed(MouseButton::Left) {
             self.holding_leftclick = true;
-            handle_button_click(buttons, grid);
+            handle_button_click(buttons, grid, mode);
         }
 
         if self.holding_leftclick {
             let (x, y) = mouse_position();
-            handle_grid_click(x, y, *zoom_level, grid);
+            handle_grid_click(x, y, *zoom_level, grid, *mode);
         }
 
         if is_mouse_button_released(MouseButton::Left) {
@@ -42,7 +44,7 @@ impl InputHandler {
     }
 
     pub fn resize(&mut self, buttons: &mut [button::Button; constants::buttons::NUM_BUTTONS]) {
-        let mut y = constants::grid::y_pos();
+        let mut y = grid::y_pos();
         for button in buttons {
             button.x = constants::buttons::right_buttons_x();
             button.y = y;
@@ -59,11 +61,12 @@ pub fn handle_grid_click(
     x: f32,
     y: f32,
     zoom_level: u16,
-    grid: &mut [[[f32; 4]; constants::grid::NUM_TILES]; constants::grid::NUM_TILES],
+    grid: &mut [[[f32; 4]; grid::NUM_TILES]; grid::NUM_TILES],
+    mode: Color,
 ) {
-    let center = constants::grid::NUM_TILES / 2;
+    let center = grid::NUM_TILES / 2;
     let i = center.saturating_sub(zoom_level as usize / 2);
-    let j = (center + zoom_level as usize / 2).min(constants::grid::NUM_TILES);
+    let j = (center + zoom_level as usize / 2).min(grid::NUM_TILES);
 
     for row in i..j {
         for col in i..j {
@@ -75,7 +78,9 @@ pub fn handle_grid_click(
             let bottomright = (grid_x + grid_size, grid_y + grid_size);
 
             if click_inside_box(x, y, topleft.0, topleft.1, bottomright.0, bottomright.1) {
-                grid[row][col][3] = 1.0;
+                if mode == BLACK {
+                    grid[row][col][3] = 1.0;
+                }
             }
         }
     }
@@ -83,24 +88,26 @@ pub fn handle_grid_click(
 
 pub fn handle_button_click(
     buttons: &mut [button::Button; constants::buttons::NUM_BUTTONS],
-    grid: &mut [[[f32; 4]; constants::grid::NUM_TILES]; constants::grid::NUM_TILES],
+    grid: &mut [[[f32; 4]; grid::NUM_TILES]; grid::NUM_TILES],
+    mode: &mut Color,
 ) {
     for button in buttons {
         if button.hovered() {
             match button.text.as_str() {
-                "CLEAR" => clear_grid(grid),
-                "PLACE WALL" => {},
-                "START FLAG" => {},
-                "END FLAGE" => {},
+                "CLEAR" => clear_grid(mode, grid),
+                "PLACE WALL" => *mode = BLACK,
+                "START FLAG" => *mode = GREEN,
+                "END FLAG" => *mode = BLUE,
                 _ => {}
             }
         }
     }
 }
 
-pub fn clear_grid(grid: &mut [[[f32; 4]; constants::grid::NUM_TILES]; constants::grid::NUM_TILES]) {
-    for row in 0..constants::grid::NUM_TILES {
-        for col in 0..constants::grid::NUM_TILES {
+pub fn clear_grid(mode: &mut Color, grid: &mut [[[f32; 4]; grid::NUM_TILES]; grid::NUM_TILES]) {
+    *mode = WHITE;
+    for row in 0..grid::NUM_TILES {
+        for col in 0..grid::NUM_TILES {
             grid[row][col][3] = 0.0;
         }
     }

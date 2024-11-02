@@ -1,20 +1,18 @@
 use crate::button;
 use crate::constants;
+use constants::grid;
 use macroquad::prelude::*;
 
-pub fn adjust_grid(
-    zoom_level: u16,
-    grid: &mut [[[f32; 4]; constants::grid::NUM_TILES]; constants::grid::NUM_TILES],
-) {
-    let tile_size = constants::grid::size() / zoom_level as f32;
+pub fn adjust_grid(zoom_level: u16, grid: &mut [[[f32; 4]; grid::NUM_TILES]; grid::NUM_TILES]) {
+    let tile_size = grid::size() / zoom_level as f32;
 
-    let center = constants::grid::NUM_TILES / 2;
+    let center = grid::NUM_TILES / 2;
     let i = center.saturating_sub(zoom_level as usize / 2);
-    let j = (center + zoom_level as usize / 2).min(constants::grid::NUM_TILES);
+    let j = (center + zoom_level as usize / 2).min(grid::NUM_TILES);
 
-    let mut y_pos = constants::grid::y_pos() as f32;
+    let mut y_pos = grid::y_pos() as f32;
     for row in i..j {
-        let mut x_pos: f32 = constants::grid::x_pos() as f32;
+        let mut x_pos: f32 = grid::x_pos() as f32;
         for col in i..j {
             grid[row][col][0] = x_pos;
             grid[row][col][1] = y_pos;
@@ -27,20 +25,22 @@ pub fn adjust_grid(
 
 pub fn draw_objects(
     zoom_level: u16,
-    grid: [[[f32; 4]; constants::grid::NUM_TILES]; constants::grid::NUM_TILES],
+    grid: [[[f32; 4]; grid::NUM_TILES]; grid::NUM_TILES],
     buttons: &[button::Button],
+    mode: Color,
 ) {
-    draw_grid(zoom_level, grid);
-    draw_buttons(buttons);
+    draw_grid(zoom_level, grid, mode);
+    draw_buttons(buttons, mode);
 }
 
 pub fn draw_grid(
     zoom_level: u16,
-    grid: [[[f32; 4]; constants::grid::NUM_TILES]; constants::grid::NUM_TILES],
+    grid: [[[f32; 4]; grid::NUM_TILES]; grid::NUM_TILES],
+    mode: Color,
 ) {
-    let center = constants::grid::NUM_TILES / 2;
+    let center = grid::NUM_TILES / 2;
     let i = center.saturating_sub(zoom_level as usize / 2);
-    let j = (center + zoom_level as usize / 2).min(constants::grid::NUM_TILES);
+    let j = (center + zoom_level as usize / 2).min(grid::NUM_TILES);
 
     for row in i..j {
         for col in i..j {
@@ -56,9 +56,17 @@ pub fn draw_grid(
             }
 
             draw_rectangle(x, y, size, size, color);
-            draw_rectangle_lines(x, y, size, size, constants::grid::TILE_THICKNESS, BLACK);
+            draw_rectangle_lines(x, y, size, size, grid::TILE_THICKNESS, BLACK);
         }
     }
+    draw_rectangle_lines(
+        grid::x_pos(),
+        grid::y_pos(),
+        grid::size(),
+        grid::size(),
+        grid::border_thickness(),
+        mode,
+    );
 }
 
 pub fn tile_hovered(tile_x: f32, tile_y: f32, size: f32) -> bool {
@@ -66,8 +74,8 @@ pub fn tile_hovered(tile_x: f32, tile_y: f32, size: f32) -> bool {
     x >= tile_x && x <= tile_x + size && y >= tile_y && y <= tile_y + size
 }
 
-pub fn draw_buttons(buttons: &[button::Button]) {
+pub fn draw_buttons(buttons: &[button::Button], mode: Color) {
     for button in buttons {
-        button.draw();
+        button.draw(mode);
     }
 }

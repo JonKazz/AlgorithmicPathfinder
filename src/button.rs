@@ -22,8 +22,16 @@ impl Button {
         }
     }
 
-    pub fn draw(&self) {
+    pub fn draw(&self, border_color: Color) {
         draw_rectangle(self.x, self.y, self.width, self.height, self.get_color());
+        draw_rectangle_lines(
+            self.x,
+            self.y,
+            self.width,
+            self.height,
+            constants::buttons::BORDER_SIZE,
+            border_color,
+        );
         let font_size = 20.0;
         let text_x = self.x
             + (self.width - measure_text(&self.text, None, font_size as u16, 1.0).width) / 2.0;
