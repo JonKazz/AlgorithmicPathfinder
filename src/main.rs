@@ -4,11 +4,12 @@ mod button;
 mod constants;
 mod draw;
 mod inputs;
+mod tile;
 
 use button::Button;
 use constants::{buttons, grid};
 
-#[macroquad::main("MyGame")]
+#[macroquad::main("Pathfinder")]
 async fn main() {
     set_fullscreen(true);
 
@@ -33,12 +34,13 @@ async fn main() {
 
     let mut mode: Color = WHITE;
     let mut zoom_level: u16 = 30;
-    let mut grid = [[[0.0; 4]; grid::NUM_TILES]; grid::NUM_TILES];
+    let mut grid = [[tile::Tile::new(0.0, 0.0, 50.0, WHITE); grid::NUM_TILES]; grid::NUM_TILES];
     let mut input_handler = inputs::InputHandler::new();
     let mut window_size = (screen_width(), screen_height());
 
     loop {
         clear_background(DARKGRAY);
+
         draw::adjust_grid(zoom_level, &mut grid);
         draw::draw_objects(zoom_level, grid, &buttons, mode);
         input_handler.handle_inputs(&mut zoom_level, &mut grid, &mut buttons, &mut mode);

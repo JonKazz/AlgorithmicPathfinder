@@ -1,5 +1,6 @@
 use crate::button;
 use crate::constants;
+use crate::tile;
 use constants::grid;
 use macroquad::prelude::*;
 
@@ -17,7 +18,7 @@ impl InputHandler {
     pub fn handle_inputs(
         &mut self,
         zoom_level: &mut u16,
-        grid: &mut [[[f32; 4]; grid::NUM_TILES]; grid::NUM_TILES],
+        grid: &mut [[tile::Tile; grid::NUM_TILES]; grid::NUM_TILES],
         buttons: &mut [button::Button; constants::buttons::NUM_BUTTONS],
         mode: &mut Color,
     ) {
@@ -31,11 +32,11 @@ impl InputHandler {
         if is_mouse_button_pressed(MouseButton::Left) {
             self.holding_leftclick = true;
             handle_button_click(buttons, grid, mode);
+            handle_grid_click(*zoom_level, grid, mode);
         }
 
-        if self.holding_leftclick {
-            let (x, y) = mouse_position();
-            handle_grid_click(x, y, *zoom_level, grid, *mode);
+        if self.holding_leftclick && *mode == BLACK {
+            handle_grid_click(*zoom_level, grid, mode);
         }
 
         if is_mouse_button_released(MouseButton::Left) {
@@ -53,16 +54,10 @@ impl InputHandler {
     }
 }
 
-fn click_inside_box(x: f32, y: f32, x_min: f32, y_min: f32, x_max: f32, y_max: f32) -> bool {
-    x >= x_min && x <= x_max && y >= y_min && y <= y_max
-}
-
 pub fn handle_grid_click(
-    x: f32,
-    y: f32,
     zoom_level: u16,
-    grid: &mut [[[f32; 4]; grid::NUM_TILES]; grid::NUM_TILES],
-    mode: Color,
+    grid: &mut [[tile::Tile; grid::NUM_TILES]; grid::NUM_TILES],
+    mode: &mut Color,
 ) {
     let center = grid::NUM_TILES / 2;
     let i = center.saturating_sub(zoom_level as usize / 2);
@@ -70,16 +65,16 @@ pub fn handle_grid_click(
 
     for row in i..j {
         for col in i..j {
-            let grid_x = grid[row][col][0];
-            let grid_y = grid[row][col][1];
-            let grid_size = grid[row][col][2];
-
-            let topleft = (grid_x, grid_y);
-            let bottomright = (grid_x + grid_size, grid_y + grid_size);
-
-            if click_inside_box(x, y, topleft.0, topleft.1, bottomright.0, bottomright.1) {
-                if mode == BLACK {
-                    grid[row][col][3] = 1.0;
+            let tile = &mut grid[row][col];
+            if tile.tile_hovered() {
+                if *mode == BLACK {
+                    tile.color = BLACK;
+                } else if *mode == GREEN {
+                    tile.color = GREEN;
+                    *mode = WHITE;
+                } else if *mode == BLUE {
+                    tile.color = BLUE;
+                    *mode = WHITE;
                 }
             }
         }
@@ -88,7 +83,7 @@ pub fn handle_grid_click(
 
 pub fn handle_button_click(
     buttons: &mut [button::Button; constants::buttons::NUM_BUTTONS],
-    grid: &mut [[[f32; 4]; grid::NUM_TILES]; grid::NUM_TILES],
+    grid: &mut [[tile::Tile; grid::NUM_TILES]; grid::NUM_TILES],
     mode: &mut Color,
 ) {
     for button in buttons {
@@ -96,19 +91,35 @@ pub fn handle_button_click(
             match button.text.as_str() {
                 "CLEAR" => clear_grid(mode, grid),
                 "PLACE WALL" => *mode = BLACK,
-                "START FLAG" => *mode = GREEN,
-                "END FLAG" => *mode = BLUE,
+                "START FLAG" => set_flag(mode, GREEN, grid),
+                "END FLAG" => set_flag(mode, BLUE, grid),
                 _ => {}
             }
         }
     }
 }
 
-pub fn clear_grid(mode: &mut Color, grid: &mut [[[f32; 4]; grid::NUM_TILES]; grid::NUM_TILES]) {
+pub fn set_flag(
+    mode: &mut Color,
+    color: Color,
+    grid: &mut [[tile::Tile; grid::NUM_TILES]; grid::NUM_TILES],
+) {
+    *mode = color;
+    for row in 0..grid::NUM_TILES {
+        for col in 0..grid::NUM_TILES {
+            let tile = &mut grid[row][col];
+            if tile.color == color {
+                tile.color = WHITE;
+            }
+        }
+    }
+}
+pub fn clear_grid(mode: &mut Color, grid: &mut [[tile::Tile; grid::NUM_TILES]; grid::NUM_TILES]) {
     *mode = WHITE;
     for row in 0..grid::NUM_TILES {
         for col in 0..grid::NUM_TILES {
-            grid[row][col][3] = 0.0;
+            let tile = &mut grid[row][col];
+            tile.color = WHITE;
         }
     }
 }

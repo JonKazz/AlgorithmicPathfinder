@@ -17,7 +17,11 @@ pub mod grid {
     pub const TILE_THICKNESS: f32 = 1.0;
 
     pub fn border_thickness() -> f32 {
-        size() / 6.0
+        size() / 8.0
+    }
+
+    pub fn border_padding() -> f32 {
+        border_thickness() / 2.0
     }
 
     pub fn size() -> f32 {
