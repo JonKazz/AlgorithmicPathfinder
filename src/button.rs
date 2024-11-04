@@ -8,10 +8,11 @@ pub struct Button {
     pub width: f32,
     pub height: f32,
     pub frozen: bool,
+    pub rightside: bool,
 }
 
 impl Button {
-    pub fn new(x: f32, y: f32, text: &str) -> Self {
+    pub fn new(x: f32, y: f32, text: &str, rightside: bool) -> Self {
         Button {
             x,
             y,
@@ -19,6 +20,7 @@ impl Button {
             width: constants::buttons::width(),
             height: constants::buttons::height(),
             frozen: false,
+            rightside,
         }
     }
 
@@ -32,7 +34,7 @@ impl Button {
             constants::buttons::BORDER_SIZE,
             border_color,
         );
-        let font_size = 20.0;
+        let font_size = self.height / 3.0;
         let text_x = self.x
             + (self.width - measure_text(&self.text, None, font_size as u16, 1.0).width) / 2.0;
         let text_y = self.y + (self.height + font_size) / 2.0;

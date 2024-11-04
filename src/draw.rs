@@ -4,9 +4,11 @@ use crate::tile;
 use constants::grid;
 use macroquad::prelude::*;
 
-pub fn adjust_grid(zoom_level: u16, grid: &mut [[tile::Tile; grid::NUM_TILES]; grid::NUM_TILES]) {
+pub fn zoom_grid(
+    zoom_level: u16, 
+    grid: &mut [[tile::Tile; grid::NUM_TILES]; grid::NUM_TILES],
+) {
     let tile_size = grid::size() / zoom_level as f32;
-
     let center = grid::NUM_TILES / 2;
     let i = center.saturating_sub(zoom_level as usize / 2);
     let j = (center + zoom_level as usize / 2).min(grid::NUM_TILES);
@@ -57,6 +59,7 @@ pub fn draw_grid(
             tile.draw();
         }
     }
+
 
     draw_line(
         grid::x_pos(),
