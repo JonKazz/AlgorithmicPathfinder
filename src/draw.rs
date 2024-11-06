@@ -61,9 +61,31 @@ impl VisualHandler {
         }
     
         draw_rectangle_lines(grid::x_pos(), grid::y_pos(), grid::size(), grid::size(), 3.0, BLACK);
+    }
 
-        for button in &self.buttons {
+    pub fn draw_buttons(&mut self, start_flag: (usize, usize), end_flag: (usize, usize), mode: Color) {
+
+        for button in &mut self.buttons {
+            button.check_if_valid_flags(start_flag, end_flag);
             button.draw(mode);
+        }
+    }
+
+    pub fn toggle_freeze_buttons(&mut self) {
+        for button in &mut self.buttons {
+            if button.frozen || button.text == "CLEAR" {
+                button.frozen = false;
+            } else {
+                button.frozen = true;
+            }
+        }
+    }
+
+    pub fn reset_tiles(&mut self) {
+        for row in 0..grid::NUM_TILES {
+            for col in 0..grid::NUM_TILES {
+                self.grid[row][col].color = WHITE;
+            }
         }
     }
 }

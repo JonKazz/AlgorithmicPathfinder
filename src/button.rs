@@ -1,4 +1,4 @@
-use crate::constants;
+use crate::{constants, grid};
 use macroquad::prelude::*;
 
 pub struct Button {
@@ -53,6 +53,21 @@ impl Button {
 
     pub fn hovered(&self) -> bool {
         let (x, y) = mouse_position();
+        if self.frozen {
+            return false
+        }
         x >= self.x && x <= self.x + self.width && y >= self.y && y <= self.y + self.height
     }
+
+    pub fn check_if_valid_flags(
+        &mut self, 
+        start_flag: (usize, usize), 
+        end_flag: (usize, usize),
+    ) {
+        if self.text == "SEARCH" {
+            if start_flag.0 < grid::NUM_TILES && end_flag.0 < grid::NUM_TILES {
+                self.frozen = false;
+            }
+        }
+    } 
 }

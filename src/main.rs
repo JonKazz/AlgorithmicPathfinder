@@ -41,14 +41,14 @@ async fn main() {
         ),
     ];
 
-    let mut mode = WHITE;
+    let mode = WHITE;
     let grid = [[tile::Tile::new(0.0, 0.0, 50.0, WHITE); grid::NUM_TILES]; grid::NUM_TILES];
 
     let mut visual_handler = draw::VisualHandler::new(30, grid, buttons);
-    let mut input_handler = inputs::InputHandler::new();
     let mut window_size = (screen_width(), screen_height());
-    let mut start_flag = (grid::NUM_TILES + 1, grid::NUM_TILES + 1);
-    let mut end_flag = (grid::NUM_TILES + 1, grid::NUM_TILES + 1);
+    let start_flag = (grid::NUM_TILES + 1, grid::NUM_TILES + 1);
+    let end_flag = (grid::NUM_TILES + 1, grid::NUM_TILES + 1);
+    let mut input_handler = inputs::InputHandler::new(mode, start_flag, end_flag);
 
     let mut bfs_state: Option<BFSState> = None;
 
@@ -56,31 +56,29 @@ async fn main() {
         clear_background(DARKGRAY);
 
         visual_handler.zoom_grid();
-        visual_handler.draw_grid(mode);
-        input_handler.handle_inputs(
-            &mut visual_handler,
-            &mut mode,
-            &mut start_flag,
-            &mut end_flag,
-        );
+        visual_handler.draw_grid(input_handler.mode);
+        visual_handler.draw_buttons(input_handler.start_flag, input_handler.end_flag, input_handler.mode);
+        input_handler.handle_inputs(&mut visual_handler);
 
-        if mode == RED {
+        if input_handler.mode == RED {
             if bfs_state.is_none() {
-                bfs_state = Some(BFSState::new(start_flag, end_flag));
+                bfs_state = Some(BFSState::new(input_handler.start_flag, input_handler.end_flag));
             }
 
             if let Some(state) = &mut bfs_state {
                 let finished = state.step(&mut visual_handler).await;
                 if finished {
                     bfs_state = None;
-                    mode = WHITE;
+                    input_handler.mode = YELLOW;
                 }
             }
+        } else {
+            bfs_state = None;
         }
 
         let current_window_size = (screen_width(), screen_height());
         if window_size != current_window_size {
-            input_handler.resize(&mut visual_handler.buttons);
+            inputs::resize_buttons(&mut visual_handler.buttons);
             window_size = current_window_size;
         }
 
