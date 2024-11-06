@@ -27,11 +27,15 @@ impl InputHandler {
         &mut self,
         vh : &mut draw::VisualHandler,
     ) {
-        let (_, scroll) = mouse_wheel();
-        if scroll > 0.0 && vh.zoom_level < (grid::NUM_TILES as u16) - 1 {
-            vh.zoom_level += 2;
-        } else if scroll < 0.0 && vh.zoom_level > 10 {
-            vh.zoom_level -= 2;
+        if self.mode != RED {
+            let (_, scroll) = mouse_wheel();
+            if scroll > 0.0 && vh.zoom_level < (grid::NUM_TILES as u16) - 1 {
+                vh.zoom_level += 2;
+                vh.zoom_grid();
+            } else if scroll < 0.0 && vh.zoom_level > 10 {
+                vh.zoom_level -= 2;
+                vh.zoom_grid();
+            }
         }
 
         if is_mouse_button_pressed(MouseButton::Left) {
@@ -116,7 +120,6 @@ impl InputHandler {
     }
     
 }
-
 
 
 pub fn set_flag(
