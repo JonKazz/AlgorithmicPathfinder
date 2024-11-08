@@ -2,7 +2,7 @@
 
 A visual sandbox for BFS, DFS, and A\* pathfinding algorithms
 
-![Binary Tree Visualizer Demo](assets/algovisual2.gif)
+![Binary Tree Visualizer Demo](assets/algovis.gif)
 
 ## Installation
 
