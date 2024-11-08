@@ -40,22 +40,17 @@ async fn main() {
             "END FLAG",
             true,
         ),
-        Button::new(
-            buttons::left_buttons_x(),
-            grid::y_pos(),
-            "DFS SEARCH",
-            false,
-        ),
+        Button::new(buttons::left_buttons_x(), grid::y_pos(), "DFS", false),
         Button::new(
             buttons::left_buttons_x(),
             grid::y_pos() + buttons::button_distance_y(),
-            "BFS SEARCH",
+            "BFS",
             false,
         ),
         Button::new(
             buttons::left_buttons_x(),
             grid::y_pos() + buttons::button_distance_y() * 2.0,
-            "A* SEARCH",
+            "A*",
             false,
         ),
         Button::new(

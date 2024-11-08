@@ -88,14 +88,14 @@ impl InputHandler {
                 "PLACE WALL" => self.mode = BLACK,
                 "START FLAG" => set_flag(&mut self.mode, GREEN, &mut vh.grid),
                 "END FLAG" => set_flag(&mut self.mode, BLUE, &mut vh.grid),
-                "DFS SEARCH" => {
+                "DFS" => {
                     self.mode = YELLOW;
                 }
 
-                "BFS SEARCH" => {
+                "BFS" => {
                     self.mode = ORANGE;
                 }
-                "A* SEARCH" => {
+                "A*" => {
                     self.mode = RED;
                 }
                 "RANDOM MAZE" => {

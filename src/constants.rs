@@ -41,7 +41,7 @@ pub mod buttons {
     use super::grid;
 
     pub const NUM_BUTTONS: usize = 8;
-    pub const SEARCH_BUTTONS: [&str; 3] = ["BFS SEARCH", "DFS SEARCH", "A* SEARCH"];
+    pub const SEARCH_BUTTONS: [&str; 3] = ["BFS", "DFS", "A*"];
 
     pub fn border_size() -> f32 {
         height() / 10.0
