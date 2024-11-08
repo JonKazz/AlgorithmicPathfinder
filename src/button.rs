@@ -1,4 +1,6 @@
-use crate::{constants, grid};
+use crate::constants::{buttons, colors};
+use crate::grid;
+
 use macroquad::prelude::*;
 
 pub struct Button {
@@ -17,22 +19,22 @@ impl Button {
             x,
             y,
             text: text.to_string(),
-            width: constants::buttons::width(),
-            height: constants::buttons::height(),
+            width: buttons::width(),
+            height: buttons::height(),
             frozen: false,
             rightside,
         }
     }
 
-    pub fn draw(&self, border_color: Color) {
+    pub fn draw(&self, mode: Color) {
         draw_rectangle(self.x, self.y, self.width, self.height, self.get_color());
         draw_rectangle_lines(
             self.x,
             self.y,
             self.width,
             self.height,
-            constants::buttons::BORDER_SIZE,
-            border_color,
+            buttons::border_size(),
+            self.get_border_color(mode),
         );
         let font_size = self.height / 3.0;
         let text_x = self.x
@@ -43,12 +45,19 @@ impl Button {
 
     pub fn get_color(&self) -> Color {
         if self.frozen {
-            DARKGRAY
+            colors::FROZEN
         } else if self.hovered() {
-            GRAY
+            colors::HOVERED
         } else {
             WHITE
         }
+    }
+
+    pub fn get_border_color(&self, mode: Color) -> Color {
+        if self.frozen || mode == WHITE {
+            return DARKGRAY;
+        } 
+        mode
     }
 
     pub fn hovered(&self) -> bool {
@@ -63,10 +72,17 @@ impl Button {
         &mut self, 
         start_flag: (usize, usize), 
         end_flag: (usize, usize),
+        mode: Color,
     ) {
-        if self.text == "SEARCH" {
-            if start_flag.0 < grid::NUM_TILES && end_flag.0 < grid::NUM_TILES {
-                self.frozen = false;
+        if self.text != "CLEAR" {
+            if colors::FROZEN_COLORS.contains(&mode) {
+                self.frozen = true;
+            } else {
+                if buttons::SEARCH_BUTTONS.contains(&self.text.as_str()) {
+                    self.frozen = start_flag.0 > grid::NUM_TILES || end_flag.0 > grid::NUM_TILES;
+                } else {
+                    self.frozen = false;
+                }
             }
         }
     } 

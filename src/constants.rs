@@ -40,8 +40,12 @@ pub mod grid {
 pub mod buttons {
     use super::grid;
 
-    pub const NUM_BUTTONS: usize = 5;
-    pub const BORDER_SIZE: f32 = 5.0;
+    pub const NUM_BUTTONS: usize = 8;
+    pub const SEARCH_BUTTONS: [&str; 3] = ["BFS SEARCH", "DFS SEARCH", "A* SEARCH"];
+
+    pub fn border_size() -> f32 {
+        height() / 10.0
+    }
 
     pub fn width() -> f32 {
         grid::size() / 3.0
@@ -62,4 +66,32 @@ pub mod buttons {
     pub fn button_distance_y() -> f32 {
         (grid::size() - (4.0 * height())) / (4.0 - 1.0) + height()
     }
+}
+
+
+pub mod colors {
+    use macroquad::{color::{ORANGE, PURPLE, RED, YELLOW}, prelude::Color};
+
+    pub const BACKGROUND: Color = Color::new(
+        200.0 / 255.0,
+        220.0 / 255.0,
+        250.0 / 255.0,
+        1.0,
+    );
+
+    pub const FROZEN: Color = Color::new(
+        170.0 / 255.0,
+        170.0 / 255.0,
+        170.0 / 255.0,
+        1.0,
+    );
+
+    pub const HOVERED: Color = Color::new(
+        215.0 / 255.0,
+        215.0 / 255.0,
+        215.0 / 255.0,
+        1.0,
+    );
+
+    pub const FROZEN_COLORS: [Color; 4] = [YELLOW, ORANGE, RED, PURPLE];
 }

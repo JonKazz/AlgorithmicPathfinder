@@ -16,7 +16,7 @@ impl Tile {
 
     pub fn draw(&mut self) {
         if self.tile_hovered() {
-            self.color = LIGHTGRAY;
+            self.color = self.get_hovered_color();
         }
 
         draw_rectangle(self.x, self.y, self.size, self.size, self.color);
@@ -34,4 +34,14 @@ impl Tile {
         let (x, y) = mouse_position();
         x >= self.x && x <= self.x + self.size && y >= self.y && y <= self.y + self.size
     }
+
+    fn get_hovered_color(&self) -> Color {
+        return Color::new(
+            self.color.r / 1.5,
+            self.color.g / 1.5,
+            self.color.b / 1.5,
+            self.color.a / 1.5,
+        )
+    }
+    
 }

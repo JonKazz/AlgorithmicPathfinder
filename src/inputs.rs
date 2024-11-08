@@ -96,10 +96,20 @@ impl InputHandler {
                 "PLACE WALL" => self.mode = BLACK,
                 "START FLAG" => set_flag(&mut self.mode, GREEN, &mut vh.grid),
                 "END FLAG" => set_flag(&mut self.mode, BLUE, &mut vh.grid),
-                "SEARCH" => {
-                    self.mode = RED;
-                    vh.toggle_freeze_buttons(); 
+                "DFS SEARCH" => {
+                    self.mode = YELLOW;
+                }
+                
+                "BFS SEARCH" => {
+                    self.mode = ORANGE;
                 },
+                "A* SEARCH" => {
+                    self.mode = RED;
+                },
+                "RANDOM MAZE" => {
+                    self.clear_grid(vh);
+                    vh.random_maze();
+                }
                 _ => {}
             }
         }
@@ -109,14 +119,25 @@ impl InputHandler {
         &mut self,
         vh: &mut draw::VisualHandler,
     ) {
-        if self.mode == RED || self.mode == YELLOW {
-            vh.toggle_freeze_buttons();
-        }
+        if self.mode == PURPLE {
+            for row in 0..grid::NUM_TILES {
+                for col in 0..grid::NUM_TILES {
+                    let tile = vh.grid[row][col];
+                    if tile.color != BLACK && tile.color != BLUE && tile.color != GREEN {
+                        vh.grid[row][col].color = WHITE;
+                    }
+                }
+            }
+        } else {
+            for row in 0..grid::NUM_TILES {
+                for col in 0..grid::NUM_TILES {
+                    vh.grid[row][col].color = WHITE;
+                }
+            }
+            self.start_flag = (grid::NUM_TILES + 1, grid::NUM_TILES + 1);
+            self.end_flag = (grid::NUM_TILES + 1, grid::NUM_TILES + 1);
+        }        
         self.mode = WHITE;
-        
-        self.start_flag = (grid::NUM_TILES + 1, grid::NUM_TILES + 1);
-        self.end_flag = (grid::NUM_TILES + 1, grid::NUM_TILES + 1);
-        vh.reset_tiles();
     }
     
 }
