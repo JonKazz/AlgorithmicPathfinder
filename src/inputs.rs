@@ -29,7 +29,7 @@ impl InputHandler {
     ) {
         if self.mode != RED {
             let (_, scroll) = mouse_wheel();
-            if scroll > 0.0 && vh.zoom_level < (grid::NUM_TILES as u16) - 1 {
+            if scroll > 0.0 && vh.zoom_level < (grid::NUM_TILES) - 1 {
                 vh.zoom_level += 2;
                 vh.zoom_grid();
             } else if scroll < 0.0 && vh.zoom_level > 10 {
@@ -81,7 +81,7 @@ impl InputHandler {
         }
     }
 
-    pub fn handle_button_click(
+    fn handle_button_click(
         &mut self,
         vh : &mut draw::VisualHandler,
     ) {
@@ -105,7 +105,7 @@ impl InputHandler {
         }
     }
 
-    pub fn clear_grid(
+    fn clear_grid(
         &mut self,
         vh: &mut draw::VisualHandler,
     ) {
@@ -122,7 +122,7 @@ impl InputHandler {
 }
 
 
-pub fn set_flag(
+fn set_flag(
     mode: &mut Color,
     color: Color,
     grid: &mut [[tile::Tile; grid::NUM_TILES]; grid::NUM_TILES],

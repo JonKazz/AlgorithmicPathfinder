@@ -1,12 +1,16 @@
 use crate::constants::grid;
 use crate::draw;
+use crate::tile;
 use macroquad::prelude::*;
-use std::collections::VecDeque;
+use std::collections::{VecDeque, HashMap, HashSet, BinaryHeap};
+use std::cmp::Reverse;
 
+type Coordinate = (usize, usize);
 pub struct BFSState {
     q: VecDeque<(usize, usize)>,
     end_flag: (usize, usize),
-    travel_grid: [[i16; grid::NUM_TILES]; grid::NUM_TILES],
+    path: HashMap<Coordinate, Coordinate>,
+    current_path_tile: Coordinate,
     found_path: bool,
     color_scale: f32,
 }
@@ -14,86 +18,175 @@ pub struct BFSState {
 impl BFSState {
     pub fn new(start_flag: (usize, usize), end_flag: (usize, usize)) -> Self {
         let mut q = VecDeque::new();
-        let mut travel_grid = [[-1; grid::NUM_TILES]; grid::NUM_TILES];
-        travel_grid[start_flag.0][start_flag.1] = 0;
-        let found_path = false;
-        let color_scale = 0.2;
+        let path = HashMap::new();
+
         q.push_back(start_flag);
         BFSState {
             q,
             end_flag,
-            travel_grid,
-            found_path,
-            color_scale,
+            path,
+            current_path_tile: (0, 0),
+            found_path: false,
+            color_scale: 0.2,
         }
     }
 
     pub async fn step(&mut self, vh: &mut draw::VisualHandler) -> bool {
         if self.found_path {
-            return self.create_path(vh);
-        } else if let Some(tile) = self.q.pop_front() {
-            let (r, c) = (tile.0 as i16, tile.1 as i16);
-            let directions = [(1, 0), (0, 1), (-1, 0), (0, -1)];
-
-            let lower = (grid::NUM_TILES as i16 - vh.zoom_level as i16) / 2;
-            let upper = lower + vh.zoom_level as i16;
-
-            for &(dr, dc) in &directions {
-                let (nr, nc) = (r + dr, c + dc);
-
-                if (lower..upper).contains(&nr) && (lower..upper).contains(&nc) {
-                    if self.end_flag == (nr as usize, nc as usize) {
-                        self.found_path = true;
-                        self.travel_grid[nr as usize][nc as usize] =
-                            self.travel_grid[r as usize][c as usize] + 1;
-                        break;
-                    }
-
-                    let grid_color = vh.grid[nr as usize][nc as usize].color;
-                    if self.travel_grid[nr as usize][nc as usize] < 0 && grid_color != BLACK {
-                        self.q.push_back((nr as usize, nc as usize));
-                        vh.grid[nr as usize][nc as usize].color = Color::new(
-                            self.color_scale * 2.0,
-                            0.8 - self.color_scale,
-                            0.3 - self.color_scale * 1.5,
-                            1.0,
-                        );
-
-                        self.travel_grid[nr as usize][nc as usize] =
-                            self.travel_grid[r as usize][c as usize] + 1;
-                    }
+            return reconstruct_path(&self.path, &mut self.current_path_tile, vh);
+        } else if let Some(current) = self.q.pop_front() {
+            for neighbor in get_neighbors(vh, current.0, current.1) {
+                if self.end_flag == neighbor {
+                    self.found_path = true;
+                    break;
                 }
+
+                if !self.path.contains_key(&neighbor) {
+                    self.q.push_back(neighbor);
+                    self.path.insert(neighbor, current);
+                    color_tile(&mut vh.grid[neighbor.0][neighbor.1], vh.zoom_level, &mut self.color_scale);
+                }      
             }
-            self.color_scale += 0.01 * (1.0 / vh.zoom_level as f32);
+        
         } else {
             return true;
         }
+        return false;
+    }
+}
 
-        false
+
+
+
+
+#[derive(Debug, Eq, PartialEq)]
+struct Node {
+    position: Coordinate,
+    f_score: usize,
+}
+
+impl Ord for Node {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.f_score.cmp(&other.f_score)
+    }
+}
+
+impl PartialOrd for Node {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+fn get_neighbors(vh: &mut draw::VisualHandler, row: usize, col: usize) -> Vec<Coordinate> {
+    let directions = [(0, 1), (1, 0), (0, -1), (-1, 0)];
+    let mut neighbors = Vec::new();
+    
+    let lower_bound = (grid::NUM_TILES - vh.zoom_level) / 2;
+    let upper_bound = lower_bound + vh.zoom_level;
+
+    for &(dr, dc) in &directions {
+        let (nr, nc) = (row as i32 + dr, col as i32 + dc);
+        if lower_bound as i32 <= nr && nr < upper_bound as i32 && lower_bound as i32<= nc && nc < upper_bound as i32 {
+            if vh.grid[nr as usize][nc as usize].color == WHITE || vh.grid[nr as usize][nc as usize].color == BLUE {
+                neighbors.push((nr as usize, nc as usize));
+            }
+        }
+    }
+    neighbors
+}
+
+
+
+pub struct ASTARState {
+    node_candidates: BinaryHeap<Reverse<Node>>,
+    g_score: HashMap<Coordinate, usize>,
+    f_score: HashMap<Coordinate, usize>,
+    path: HashMap<Coordinate, Coordinate>,
+    found_path: bool,
+    current_path_tile: Coordinate,
+    color_scale: f32,
+}
+
+impl ASTARState {
+    pub fn new(start_flag: (usize, usize), end_flag: (usize, usize)) -> Self {
+        let mut node_candidates = BinaryHeap::new();
+        node_candidates.push(Reverse(Node {position: start_flag, f_score: heuristic(start_flag, end_flag)}));
+        
+        let mut g_score = HashMap::new();
+        g_score.insert(start_flag, 0);
+
+        let mut f_score = HashMap::new();
+        f_score.insert(start_flag, heuristic(start_flag, end_flag));
+        
+        let path = HashMap::new();
+
+        ASTARState {
+            node_candidates,
+            g_score,
+            f_score,
+            path,
+            found_path: false,
+            current_path_tile: (0, 0),
+            color_scale: 0.2,
+        }
     }
 
-    pub fn create_path(&mut self, vh: &mut draw::VisualHandler) -> bool {
-        if self.travel_grid[self.end_flag.0][self.end_flag.1] == 1 {
-            return true;
+    pub async fn step(&mut self, end_flag: Coordinate, vh: &mut draw::VisualHandler) -> bool{
+        if self.found_path {
+            return reconstruct_path(&self.path, &mut self.current_path_tile, vh);
         }
+        
+        
+        if let Some(Reverse(Node {position: current, ..})) = self.node_candidates.pop() {
+            for neighbor in get_neighbors(vh, current.0, current.1) {
+                let neighbor_g_score = self.g_score[&current] + 1;
 
-        let (r, c) = (self.end_flag.0 as i16, self.end_flag.1 as i16);
-        let current_distance = self.travel_grid[self.end_flag.0][self.end_flag.1];
-        let directions: [(i16, i16); 4] = [(1, 0), (0, 1), (-1, 0), (0, -1)];
+                if !self.g_score.contains_key(&neighbor) || neighbor_g_score < self.g_score[&neighbor] {
+                    self.path.insert(neighbor, current);
+                    self.g_score.insert(neighbor, neighbor_g_score);
+                    self.f_score.insert(neighbor, neighbor_g_score + heuristic(neighbor, end_flag));
+                    
+                    self.node_candidates.push(Reverse(Node { position: neighbor, f_score: self.f_score[&neighbor] }));
+                    
+                    if neighbor == end_flag {
+                        self.found_path = true;
+                        self.current_path_tile = *self.path.get(&end_flag).unwrap();
+                        break;
+                    }
 
-        for (dr, dc) in &directions {
-            let (nr, nc) = (r + dr, c + dc);
-
-            if 0 <= nr && nr < grid::NUM_TILES as i16 && 0 <= nc && nc < grid::NUM_TILES as i16 {
-                let neighbor_distance = self.travel_grid[nr as usize][nc as usize];
-                if neighbor_distance == current_distance - 1 {
-                    self.end_flag = (nr as usize, nc as usize);
-                    vh.grid[self.end_flag.0][self.end_flag.1].color = YELLOW;
-                    break;
+                    color_tile(&mut vh.grid[neighbor.0][neighbor.1], vh.zoom_level, &mut self.color_scale);
                 }
             }
         }
+        return false;
+    }
+}
 
-        false
+fn heuristic(a: Coordinate, b: Coordinate) -> usize {
+    (a.0 as isize - b.0 as isize).abs() as usize + (a.1 as isize - b.1 as isize).abs() as usize
+}
+
+fn color_tile(tile: &mut tile::Tile, zoom_level: usize, color_scale: &mut f32) {
+    tile.color = Color::new(
+        *color_scale * 2.0,
+        0.8 - *color_scale,
+        0.3 - *color_scale * 1.5,
+        1.0,
+    );
+
+    *color_scale += 0.01 * (1.0 / zoom_level as f32);
+}
+
+fn reconstruct_path(
+    path: &HashMap<Coordinate, Coordinate>,
+    current: &mut Coordinate,
+    vh: &mut draw::VisualHandler,
+) -> bool {
+    if let Some(&prev) = path.get(current) {
+        vh.grid[current.0][current.1].color = YELLOW;
+        *current = prev;
+        return false;
+    } else {
+        return true;
     }
 }

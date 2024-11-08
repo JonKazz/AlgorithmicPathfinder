@@ -6,14 +6,14 @@ use macroquad::prelude::*;
 
 
 pub struct VisualHandler {
-    pub zoom_level : u16,
+    pub zoom_level : usize,
     pub grid : [[tile::Tile; grid::NUM_TILES]; grid::NUM_TILES],
     pub buttons : [button::Button; buttons::NUM_BUTTONS]
 }
 
 
 impl VisualHandler {
-    pub fn new(zoom_level: u16, grid: [[tile::Tile; grid::NUM_TILES]; grid::NUM_TILES], buttons: [button::Button; buttons::NUM_BUTTONS]) -> Self {
+    pub fn new(zoom_level: usize, grid: [[tile::Tile; grid::NUM_TILES]; grid::NUM_TILES], buttons: [button::Button; buttons::NUM_BUTTONS]) -> Self {
         VisualHandler {
             zoom_level,
             grid,

@@ -1,4 +1,5 @@
-use crate::search::BFSState;
+use crate::search::{BFSState, ASTARState};
+use draw::VisualHandler;
 use macroquad::prelude::*;
 
 mod button;
@@ -41,32 +42,36 @@ async fn main() {
         ),
     ];
 
-    let mode = WHITE;
+    enum SearchAlgorithm {
+        None,
+        BFS,
+        ASTAR,
+    }
+    
     let grid = [[tile::Tile::new(0.0, 0.0, 50.0, WHITE); grid::NUM_TILES]; grid::NUM_TILES];
-
     let mut visual_handler = draw::VisualHandler::new(30, grid, buttons);
     let mut window_size = (screen_width(), screen_height());
     let start_flag = (grid::NUM_TILES + 1, grid::NUM_TILES + 1);
     let end_flag = (grid::NUM_TILES + 1, grid::NUM_TILES + 1);
-    let mut input_handler = inputs::InputHandler::new(mode, start_flag, end_flag);
+    let mut input_handler = inputs::InputHandler::new(WHITE, start_flag, end_flag);
 
-    let mut bfs_state: Option<BFSState> = None;
+    let mut bfs_state: Option<ASTARState> = None;
 
     loop {
         clear_background(DARKGRAY);
 
-        visual_handler.zoom_grid();
         visual_handler.draw_grid(input_handler.mode);
         visual_handler.draw_buttons(input_handler.start_flag, input_handler.end_flag, input_handler.mode);
         input_handler.handle_inputs(&mut visual_handler);
-
+        adjust_window(&mut window_size, &mut visual_handler);
+        
         if input_handler.mode == RED {
             if bfs_state.is_none() {
-                bfs_state = Some(BFSState::new(input_handler.start_flag, input_handler.end_flag));
+                bfs_state = Some(ASTARState::new(input_handler.start_flag, input_handler.end_flag));
             }
 
             if let Some(state) = &mut bfs_state {
-                let finished = state.step(&mut visual_handler).await;
+                let finished = state.step(input_handler.end_flag, &mut visual_handler).await;
                 if finished {
                     bfs_state = None;
                     input_handler.mode = YELLOW;
@@ -76,12 +81,17 @@ async fn main() {
             bfs_state = None;
         }
 
-        let current_window_size = (screen_width(), screen_height());
-        if window_size != current_window_size {
-            inputs::resize_buttons(&mut visual_handler.buttons);
-            window_size = current_window_size;
-        }
+        
 
         next_frame().await;
+    }
+}
+
+fn adjust_window(window_size: &mut (f32, f32), visual_handler: &mut draw::VisualHandler) {
+    let current_window_size = (screen_width(), screen_height());
+    if *window_size != current_window_size {
+        visual_handler.zoom_grid();
+        inputs::resize_buttons(&mut visual_handler.buttons);
+        *window_size = current_window_size;
     }
 }
