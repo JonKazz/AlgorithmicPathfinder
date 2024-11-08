@@ -2,8 +2,8 @@ use crate::constants::grid;
 use crate::draw;
 use crate::tile;
 use macroquad::prelude::*;
-use std::collections::{VecDeque, HashMap, BinaryHeap};
 use std::cmp::Reverse;
+use std::collections::{BinaryHeap, HashMap, VecDeque};
 
 type Coordinate = (usize, usize);
 pub struct BFSState {
@@ -43,17 +43,19 @@ impl BFSState {
                 if !self.path.contains_key(&neighbor) {
                     self.q.push_back(neighbor);
                     self.path.insert(neighbor, current);
-                    color_tile(&mut vh.grid[neighbor.0][neighbor.1], vh.zoom_level, &mut self.color_scale);
-                }      
+                    color_tile(
+                        &mut vh.grid[neighbor.0][neighbor.1],
+                        vh.zoom_level,
+                        &mut self.color_scale,
+                    );
+                }
             }
-        
         } else {
             return true;
         }
         return false;
     }
 }
-
 
 pub struct DFSState {
     stack: Vec<Coordinate>,
@@ -92,18 +94,19 @@ impl DFSState {
                 if !self.path.contains_key(&neighbor) {
                     self.stack.push(neighbor);
                     self.path.insert(neighbor, current);
-                    color_tile(&mut vh.grid[neighbor.0][neighbor.1], vh.zoom_level, &mut self.color_scale);
-                }      
+                    color_tile(
+                        &mut vh.grid[neighbor.0][neighbor.1],
+                        vh.zoom_level,
+                        &mut self.color_scale,
+                    );
+                }
             }
-        
         } else {
             return true;
         }
         return false;
     }
 }
-
-
 
 #[derive(Debug, Eq, PartialEq)]
 struct Node {
@@ -127,7 +130,6 @@ fn heuristic(a: Coordinate, b: Coordinate) -> usize {
     (a.0 as isize - b.0 as isize).abs() as usize + (a.1 as isize - b.1 as isize).abs() as usize
 }
 
-
 pub struct ASTARState {
     node_candidates: BinaryHeap<Reverse<Node>>,
     g_score: HashMap<Coordinate, usize>,
@@ -141,14 +143,17 @@ pub struct ASTARState {
 impl ASTARState {
     pub fn new(start_flag: (usize, usize), end_flag: (usize, usize)) -> Self {
         let mut node_candidates = BinaryHeap::new();
-        node_candidates.push(Reverse(Node {position: start_flag, f_score: heuristic(start_flag, end_flag)}));
-        
+        node_candidates.push(Reverse(Node {
+            position: start_flag,
+            f_score: heuristic(start_flag, end_flag),
+        }));
+
         let mut g_score = HashMap::new();
         g_score.insert(start_flag, 0);
 
         let mut f_score = HashMap::new();
         f_score.insert(start_flag, heuristic(start_flag, end_flag));
-        
+
         let path = HashMap::new();
 
         ASTARState {
@@ -162,37 +167,48 @@ impl ASTARState {
         }
     }
 
-    pub async fn step(&mut self, vh: &mut draw::VisualHandler, end_flag: Coordinate) -> bool{
+    pub async fn step(&mut self, vh: &mut draw::VisualHandler, end_flag: Coordinate) -> bool {
         if self.found_path {
             return reconstruct_path(&self.path, &mut self.current_path_tile, vh);
         }
-        
-        
-        if let Some(Reverse(Node {position: current, ..})) = self.node_candidates.pop() {
+
+        if let Some(Reverse(Node {
+            position: current, ..
+        })) = self.node_candidates.pop()
+        {
             for neighbor in get_neighbors(vh, current.0, current.1) {
                 let neighbor_g_score = self.g_score[&current] + 1;
 
-                if !self.g_score.contains_key(&neighbor) || neighbor_g_score < self.g_score[&neighbor] {
+                if !self.g_score.contains_key(&neighbor)
+                    || neighbor_g_score < self.g_score[&neighbor]
+                {
                     self.path.insert(neighbor, current);
                     self.g_score.insert(neighbor, neighbor_g_score);
-                    self.f_score.insert(neighbor, neighbor_g_score + heuristic(neighbor, end_flag));
-                    
-                    self.node_candidates.push(Reverse(Node { position: neighbor, f_score: self.f_score[&neighbor] }));
-                    
+                    self.f_score
+                        .insert(neighbor, neighbor_g_score + heuristic(neighbor, end_flag));
+
+                    self.node_candidates.push(Reverse(Node {
+                        position: neighbor,
+                        f_score: self.f_score[&neighbor],
+                    }));
+
                     if neighbor == end_flag {
                         self.found_path = true;
                         self.current_path_tile = *self.path.get(&end_flag).unwrap();
                         break;
                     }
 
-                    color_tile(&mut vh.grid[neighbor.0][neighbor.1], vh.zoom_level, &mut self.color_scale);
+                    color_tile(
+                        &mut vh.grid[neighbor.0][neighbor.1],
+                        vh.zoom_level,
+                        &mut self.color_scale,
+                    );
                 }
             }
         }
         return false;
     }
 }
-
 
 fn color_tile(tile: &mut tile::Tile, zoom_level: usize, color_scale: &mut f32) {
     tile.color = Color::new(
@@ -205,25 +221,29 @@ fn color_tile(tile: &mut tile::Tile, zoom_level: usize, color_scale: &mut f32) {
     *color_scale += 0.01 * (1.0 / zoom_level as f32);
 }
 
-
 fn get_neighbors(vh: &mut draw::VisualHandler, row: usize, col: usize) -> Vec<Coordinate> {
     let directions = [(0, 1), (1, 0), (0, -1), (-1, 0)];
     let mut neighbors = Vec::new();
-    
+
     let lower_bound = (grid::NUM_TILES - vh.zoom_level) / 2;
     let upper_bound = lower_bound + vh.zoom_level;
 
     for &(dr, dc) in &directions {
         let (nr, nc) = (row as i32 + dr, col as i32 + dc);
-        if lower_bound as i32 <= nr && nr < upper_bound as i32 && lower_bound as i32<= nc && nc < upper_bound as i32 {
-            if vh.grid[nr as usize][nc as usize].color == WHITE || vh.grid[nr as usize][nc as usize].color == BLUE {
+        if lower_bound as i32 <= nr
+            && nr < upper_bound as i32
+            && lower_bound as i32 <= nc
+            && nc < upper_bound as i32
+        {
+            if vh.grid[nr as usize][nc as usize].color == WHITE
+                || vh.grid[nr as usize][nc as usize].color == BLUE
+            {
                 neighbors.push((nr as usize, nc as usize));
             }
         }
     }
     neighbors
 }
-
 
 fn reconstruct_path(
     path: &HashMap<Coordinate, Coordinate>,

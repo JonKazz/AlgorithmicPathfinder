@@ -1,16 +1,16 @@
 use crate::button;
 use crate::constants;
-use crate::tile;
 use crate::draw;
-use constants::grid;
+use crate::tile;
 use constants::buttons;
+use constants::grid;
 use macroquad::prelude::*;
 
 pub struct InputHandler {
     holding_leftclick: bool,
     pub mode: Color,
     pub start_flag: (usize, usize),
-    pub end_flag: (usize, usize)
+    pub end_flag: (usize, usize),
 }
 
 impl InputHandler {
@@ -19,14 +19,11 @@ impl InputHandler {
             holding_leftclick: false,
             mode,
             start_flag,
-            end_flag
+            end_flag,
         }
     }
 
-    pub fn handle_inputs(
-        &mut self,
-        vh : &mut draw::VisualHandler,
-    ) {
+    pub fn handle_inputs(&mut self, vh: &mut draw::VisualHandler) {
         if self.mode != RED {
             let (_, scroll) = mouse_wheel();
             if scroll > 0.0 && vh.zoom_level < (grid::NUM_TILES) - 1 {
@@ -53,25 +50,22 @@ impl InputHandler {
         }
     }
 
-    pub fn handle_grid_click(
-        &mut self,
-        vh : &mut draw::VisualHandler
-    ) {
+    pub fn handle_grid_click(&mut self, vh: &mut draw::VisualHandler) {
         let center = grid::NUM_TILES / 2;
         let i = center.saturating_sub(vh.zoom_level as usize / 2);
         let j = (center + vh.zoom_level as usize / 2).min(grid::NUM_TILES);
-    
+
         for row in i..j {
             for col in i..j {
                 let tile = &mut vh.grid[row][col];
                 if tile.tile_hovered() {
-                    if self.mode == BLACK && tile.color == WHITE{
+                    if self.mode == BLACK && tile.color == WHITE {
                         tile.color = BLACK;
-                    } else if self.mode == GREEN {
+                    } else if self.mode == GREEN && tile.color == WHITE {
                         tile.color = GREEN;
                         self.mode = WHITE;
                         self.start_flag = (row, col);
-                    } else if self.mode == BLUE {
+                    } else if self.mode == BLUE && tile.color == WHITE {
                         tile.color = BLUE;
                         self.mode = WHITE;
                         self.end_flag = (row, col);
@@ -81,15 +75,13 @@ impl InputHandler {
         }
     }
 
-    fn handle_button_click(
-        &mut self,
-        vh : &mut draw::VisualHandler,
-    ) {
-    
-        let clicked_button = vh.buttons.iter()
+    fn handle_button_click(&mut self, vh: &mut draw::VisualHandler) {
+        let clicked_button = vh
+            .buttons
+            .iter()
             .find(|button| button.hovered())
-            .map (|button| button.text.as_str());
-    
+            .map(|button| button.text.as_str());
+
         if let Some(clicked_button) = clicked_button {
             match clicked_button {
                 "CLEAR" => self.clear_grid(vh),
@@ -99,13 +91,13 @@ impl InputHandler {
                 "DFS SEARCH" => {
                     self.mode = YELLOW;
                 }
-                
+
                 "BFS SEARCH" => {
                     self.mode = ORANGE;
-                },
+                }
                 "A* SEARCH" => {
                     self.mode = RED;
-                },
+                }
                 "RANDOM MAZE" => {
                     self.clear_grid(vh);
                     vh.random_maze();
@@ -115,10 +107,7 @@ impl InputHandler {
         }
     }
 
-    fn clear_grid(
-        &mut self,
-        vh: &mut draw::VisualHandler,
-    ) {
+    fn clear_grid(&mut self, vh: &mut draw::VisualHandler) {
         if self.mode == PURPLE {
             for row in 0..grid::NUM_TILES {
                 for col in 0..grid::NUM_TILES {
@@ -136,12 +125,10 @@ impl InputHandler {
             }
             self.start_flag = (grid::NUM_TILES + 1, grid::NUM_TILES + 1);
             self.end_flag = (grid::NUM_TILES + 1, grid::NUM_TILES + 1);
-        }        
+        }
         self.mode = WHITE;
     }
-    
 }
-
 
 fn set_flag(
     mode: &mut Color,

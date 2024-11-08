@@ -73,13 +73,17 @@ async fn main() {
     let end_flag = (grid::NUM_TILES + 1, grid::NUM_TILES + 1);
     let mut input_handler = inputs::InputHandler::new(WHITE, start_flag, end_flag);
     let mut search_algo = SearchAlgorithm::None;
-
+    visual_handler.zoom_grid();
 
     loop {
         clear_background(colors::BACKGROUND);
 
         visual_handler.draw_grid(input_handler.mode);
-        visual_handler.draw_buttons(input_handler.start_flag, input_handler.end_flag, input_handler.mode);
+        visual_handler.draw_buttons(
+            input_handler.start_flag,
+            input_handler.end_flag,
+            input_handler.mode,
+        );
         input_handler.handle_inputs(&mut visual_handler);
         adjust_window(&mut window_size, &mut visual_handler);
         generate_search(&mut input_handler, &mut visual_handler, &mut search_algo).await;
@@ -99,7 +103,7 @@ fn adjust_window(window_size: &mut (f32, f32), visual_handler: &mut draw::Visual
 
 async fn generate_search(
     input_handler: &mut inputs::InputHandler,
-    visual_handler: &mut draw::VisualHandler, 
+    visual_handler: &mut draw::VisualHandler,
     search_algo: &mut SearchAlgorithm,
 ) {
     if input_handler.mode == YELLOW {
@@ -124,7 +128,10 @@ async fn generate_search(
         }
     } else if input_handler.mode == RED {
         if let SearchAlgorithm::None = search_algo {
-            *search_algo = SearchAlgorithm::ASTAR(ASTARState::new(input_handler.start_flag, input_handler.end_flag));
+            *search_algo = SearchAlgorithm::ASTAR(ASTARState::new(
+                input_handler.start_flag,
+                input_handler.end_flag,
+            ));
         } else if let SearchAlgorithm::ASTAR(state) = search_algo {
             let finished = state.step(visual_handler, input_handler.end_flag).await;
             if finished {
@@ -136,4 +143,3 @@ async fn generate_search(
         *search_algo = SearchAlgorithm::None;
     }
 }
-

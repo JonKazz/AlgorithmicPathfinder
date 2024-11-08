@@ -14,9 +14,9 @@ impl Tile {
         Tile { x, y, size, color }
     }
 
-    pub fn draw(&mut self) {
+    pub fn draw(&mut self, mode: Color) {
         if self.tile_hovered() {
-            self.color = self.get_hovered_color();
+            self.color = self.get_hovered_color(mode);
         }
 
         draw_rectangle(self.x, self.y, self.size, self.size, self.color);
@@ -35,13 +35,24 @@ impl Tile {
         x >= self.x && x <= self.x + self.size && y >= self.y && y <= self.y + self.size
     }
 
-    fn get_hovered_color(&self) -> Color {
-        return Color::new(
-            self.color.r / 1.5,
-            self.color.g / 1.5,
-            self.color.b / 1.5,
-            self.color.a / 1.5,
-        )
+    fn get_hovered_color(&self, mode: Color) -> Color {
+        if mode == BLUE || mode == GREEN {
+            if self.color != WHITE {
+                return constants::colors::INVALID;
+            } else if mode == BLUE {
+                return constants::colors::HOVERED_BLUE;
+            } else {
+                return constants::colors::HOVERED_GREEN;
+            }
+        } else if self.color == BLACK {
+            return GRAY;
+        } else {
+            return Color::new(
+                self.color.r / 1.2,
+                self.color.g / 1.2,
+                self.color.b / 1.2,
+                self.color.a,
+            );
+        }
     }
-    
 }

@@ -68,30 +68,17 @@ pub mod buttons {
     }
 }
 
-
 pub mod colors {
-    use macroquad::{color::{ORANGE, PURPLE, RED, YELLOW}, prelude::Color};
+    use macroquad::{
+        color::{BLUE, GREEN, ORANGE, PURPLE, RED, YELLOW},
+        prelude::Color,
+    };
 
-    pub const BACKGROUND: Color = Color::new(
-        200.0 / 255.0,
-        220.0 / 255.0,
-        250.0 / 255.0,
-        1.0,
-    );
-
-    pub const FROZEN: Color = Color::new(
-        170.0 / 255.0,
-        170.0 / 255.0,
-        170.0 / 255.0,
-        1.0,
-    );
-
-    pub const HOVERED: Color = Color::new(
-        215.0 / 255.0,
-        215.0 / 255.0,
-        215.0 / 255.0,
-        1.0,
-    );
-
-    pub const FROZEN_COLORS: [Color; 4] = [YELLOW, ORANGE, RED, PURPLE];
+    pub const BACKGROUND: Color = Color::new(200.0 / 255.0, 220.0 / 255.0, 250.0 / 255.0, 1.0);
+    pub const FROZEN: Color = Color::new(170.0 / 255.0, 170.0 / 255.0, 170.0 / 255.0, 1.0);
+    pub const HOVERED: Color = Color::new(215.0 / 255.0, 215.0 / 255.0, 215.0 / 255.0, 1.0);
+    pub const HOVERED_BLUE: Color = Color::new(140.0 / 255.0, 180.0 / 255.0, 1.0, 1.0);
+    pub const HOVERED_GREEN: Color = Color::new(160.0 / 255.0, 1.0, 160.0 / 255.0, 1.0);
+    pub const INVALID: Color = Color::new(160.0 / 255.0, 70.0 / 255.0, 70.0 / 255.0, 1.0);
+    pub const FROZEN_COLORS: [Color; 6] = [YELLOW, ORANGE, RED, PURPLE, GREEN, BLUE];
 }

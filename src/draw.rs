@@ -1,23 +1,25 @@
 extern crate rand;
-use rand::Rng;
 use crate::button;
 use crate::constants;
 use crate::tile;
+use rand::Rng;
 
-use constants::{grid, buttons};
+use constants::{buttons, grid};
 use macroquad::prelude::*;
 
-
 pub struct VisualHandler {
-    pub zoom_level : usize,
-    pub grid : [[tile::Tile; grid::NUM_TILES]; grid::NUM_TILES],
-    pub buttons : [button::Button; buttons::NUM_BUTTONS],
-    view_range : std::ops::Range<usize>,
+    pub zoom_level: usize,
+    pub grid: [[tile::Tile; grid::NUM_TILES]; grid::NUM_TILES],
+    pub buttons: [button::Button; buttons::NUM_BUTTONS],
+    view_range: std::ops::Range<usize>,
 }
 
-
 impl VisualHandler {
-    pub fn new(zoom_level: usize, grid: [[tile::Tile; grid::NUM_TILES]; grid::NUM_TILES], buttons: [button::Button; buttons::NUM_BUTTONS]) -> Self {
+    pub fn new(
+        zoom_level: usize,
+        grid: [[tile::Tile; grid::NUM_TILES]; grid::NUM_TILES],
+        buttons: [button::Button; buttons::NUM_BUTTONS],
+    ) -> Self {
         VisualHandler {
             zoom_level,
             grid,
@@ -28,7 +30,8 @@ impl VisualHandler {
 
     pub fn zoom_grid(&mut self) {
         let tile_size = grid::size() / self.zoom_level as f32;
-        self.view_range = (grid::NUM_TILES / 2 - self.zoom_level / 2)..(self.zoom_level + (grid::NUM_TILES / 2 - self.zoom_level / 2));
+        self.view_range = (grid::NUM_TILES / 2 - self.zoom_level / 2)
+            ..(self.zoom_level + (grid::NUM_TILES / 2 - self.zoom_level / 2));
 
         let mut y_pos = grid::y_pos() as f32;
         for row in self.view_range.clone() {
@@ -60,19 +63,29 @@ impl VisualHandler {
             buttons::border_size(),
             if mode == WHITE { DARKGRAY } else { mode },
         );
-    
+
+        draw_rectangle(
+            grid::x_pos() - 2.0,
+            grid::y_pos() - 2.0,
+            grid::size() + 4.0,
+            grid::size() + 4.0,
+            BLACK,
+        );
+
         for row in self.view_range.clone() {
             for col in self.view_range.clone() {
                 let mut tile = self.grid[row][col];
-                tile.draw();
+                tile.draw(mode);
             }
         }
-    
-        draw_rectangle_lines(grid::x_pos(), grid::y_pos(), grid::size(), grid::size(), 3.0, BLACK);
     }
 
-    pub fn draw_buttons(&mut self, start_flag: (usize, usize), end_flag: (usize, usize), mode: Color) {
-
+    pub fn draw_buttons(
+        &mut self,
+        start_flag: (usize, usize),
+        end_flag: (usize, usize),
+        mode: Color,
+    ) {
         for button in &mut self.buttons {
             button.check_if_valid_flags(start_flag, end_flag, mode);
             button.draw(mode);
@@ -102,9 +115,13 @@ impl VisualHandler {
                 "U" => row += 2,
                 "D" => row -= 2,
                 _ => print!("WHAT"),
-            } 
+            }
 
-            if row > 0 && col > 0 && self.view_range.contains(&(row as usize)) && self.view_range.contains(&(col as usize)) {
+            if row > 0
+                && col > 0
+                && self.view_range.contains(&(row as usize))
+                && self.view_range.contains(&(col as usize))
+            {
                 let row = row as usize;
                 let col = col as usize;
                 if self.grid[row][col].color != WHITE {
@@ -113,23 +130,22 @@ impl VisualHandler {
                     } else {
                         original_row.saturating_sub((original_row - row) / 2)
                     };
-                    
+
                     let mid_col = if col > original_col {
                         original_col + (col - original_col) / 2
                     } else {
                         original_col.saturating_sub((original_col - col) / 2)
                     };
-                    
+
                     self.grid[row][col].color = WHITE;
                     self.grid[mid_row][mid_col].color = WHITE;
                     self.recursive_dfs((row, col));
                 }
             }
         }
-
     }
 
-    fn blackout_grid(&mut self) {    
+    fn blackout_grid(&mut self) {
         for row in self.view_range.clone() {
             for col in self.view_range.clone() {
                 self.grid[row][col].color = BLACK;
